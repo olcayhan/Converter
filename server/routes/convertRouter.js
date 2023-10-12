@@ -29,7 +29,6 @@ router.post("/zip-download", async (req, res) => {
     const data = req.body.data;
     const zip = new JSZip();
     data.forEach((element) => {
-      console.log(element);
       zip.file(element.name, element.src.split(",")[1], {
         base64: true,
       });
