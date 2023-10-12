@@ -19,7 +19,7 @@ enum fileTypes {
 const FileUpload = () => {
   const [base64, setBase64] = useState<ImageData[]>([]);
   const [image, setImage] = useState<ImageData[]>([]);
-  const [type, setType] = useState<string>(fileTypes[2]);
+  const [type, setType] = useState<string>(fileTypes[0]);
   const [zipped, setZipped] = useState<string | undefined>(undefined);
 
   const typeArray: string[] = Object.keys(fileTypes).filter((key) =>
@@ -43,6 +43,7 @@ const FileUpload = () => {
         console.log(err);
       } finally {
         setImage([]);
+        setZipped(undefined);
       }
     }
   }, []);
@@ -72,7 +73,6 @@ const FileUpload = () => {
   const handleTypeChange = (e: any) => {
     setType(e.target.value);
     setImage([]);
-    setBase64([]);
   };
 
   const downloadZip = async () => {
@@ -88,17 +88,18 @@ const FileUpload = () => {
   const deleteImage = (data: ImageData) => {
     const filteredBase64 = base64.filter((item) => item.name !== data.name);
     setBase64(filteredBase64);
+    setZipped(undefined);
     base64.length == 0 && setImage([]);
   };
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
   return (
     <div className="flex flex-col items-start justify-center gap-3">
       <div className="flex flex-row items-center p-3 gap-2 w-full">
-        <p>Convert to :</p>
+        <p className=" font-semibold">Convert to :</p>
         <select
           name="fileType"
           id="fileType"
-          className="border-[1px] border-blue-500 py-2 px-3"
+          className="border-[1px] border-blue-500 py-2 px-3 outline-none rounded-md font-semibold"
           value={type}
           onChange={handleTypeChange}
         >
@@ -121,7 +122,7 @@ const FileUpload = () => {
         {base64.map((item, key) => {
           return (
             <div className="flex flex-col gap-3 justify-between items-center">
-              <div className="relative flex flex-col items-center justify-center p-2 gap-3">
+              <div className="relative flex flex-col items-center justify-between h-full p-2 gap-3">
                 <button
                   className="absolute top-0 right-0 z-50 text-white bg-red-400 w-7 h-7 rounded-full font-semibold"
                   onClick={() => deleteImage(item)}
@@ -135,49 +136,55 @@ const FileUpload = () => {
                   height={100}
                 />
                 <p className="max-w-[100px] truncate">{item.name}</p>
+
+                {image.length > 0 && (
+                  <a
+                    className="p-3 bg-blue-600 rounded-xl text-white font-semibold"
+                    href={image[key]?.src}
+                    download={image[key]?.name}
+                  >
+                    Download
+                  </a>
+                )}
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* {
-        <a
-          className="p-3 bg-blue-600 rounded-xl text-white font-semibold"
-          href={image?.src}
-          download={base64?.name.split(".")[0]}
+      {image.length === 0 && (
+        <button
+          className={`mt-10 p-3 ${
+            base64.length ? "bg-blue-600" : "bg-blue-200"
+          } rounded-xl text-white font-semibold`}
+          onClick={() => handleConvert()}
+          disabled={!base64.length}
         >
-          Download
-        </a>
-      } */}
+          Convert
+        </button>
+      )}
 
-      <button
-        className={`p-3 ${
-          base64.length ? "bg-blue-600" : "bg-blue-200"
-        } rounded-xl text-white font-semibold`}
-        onClick={() => handleConvert()}
-        disabled={!base64.length}
-      >
-        Convert
-      </button>
-      <button
-        className={`p-3 ${
-          base64.length ? "bg-blue-600" : "bg-blue-200"
-        } rounded-xl text-white font-semibold`}
-        onClick={downloadZip}
-        disabled={!base64.length}
-      >
-        Convert Archive
-      </button>
-      <a
-        className={`p-3 mt-10 ${
-          base64.length ? "bg-blue-600" : "bg-blue-200"
-        } rounded-xl text-white font-semibold`}
-        href={`data:application/zip;base64,${zipped}`}
-        download={"converted.zip"}
-      >
-        Download Archive
-      </a>
+      {!zipped ? (
+        <button
+          className={`p-3 ${
+            image.length ? "bg-blue-600" : "bg-blue-200"
+          } rounded-xl text-white font-semibold`}
+          onClick={downloadZip}
+          disabled={!image.length}
+        >
+          Convert Archive
+        </button>
+      ) : (
+        <a
+          className={`p-3  ${
+            base64.length ? "bg-blue-600" : "bg-blue-200"
+          } rounded-xl text-white font-semibold`}
+          href={`data:application/zip;base64,${zipped}`}
+          download={"converted.zip"}
+        >
+          Download Archive
+        </a>
+      )}
     </div>
   );
 };
